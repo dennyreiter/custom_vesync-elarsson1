@@ -88,9 +88,9 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     def supported_features(self):
         """Flag supported features."""
         return (
-            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+            FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF | FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
             if self.speed_count > 1
-            else FanEntityFeature.SET_SPEED
+            else FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF | FanEntityFeature.SET_SPEED
         )
 
     @property
