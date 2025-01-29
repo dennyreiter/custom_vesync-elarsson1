@@ -14,6 +14,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -93,8 +94,12 @@ def _setup_entities(devices, async_add_entities, coordinator):
             entities.append(VeSyncPM10Sensor(dev, coordinator))
         if has_feature(dev, "details", "filter_life"):
             entities.append(VeSyncFilterLifeSensor(dev, coordinator))
+        if has_feature(dev, "details", "filter_life_percentage"):
+            entities.append(VeSyncFilterLifeSensor(dev, coordinator))
         if has_feature(dev, "details", "fan_rotate_angle"):
             entities.append(VeSyncFanRotateAngleSensor(dev, coordinator))
+        if has_feature(dev, "details", "temperature"):
+            entities.append(VeSyncTemperatureSensor(dev, coordinator))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -482,11 +487,16 @@ class VeSyncFilterLifeSensor(VeSyncHumidifierSensorEntity):
     @property
     def native_value(self):
         """Return the filter life index."""
-        return (
-            self.smarthumidifier.filter_life
-            if hasattr(self.smarthumidifier, "filter_life")
-            else self.smarthumidifier.details["filter_life"]
-        )
+        if has_feature(self.smarthumidifier, "details", "filter_life"):
+            life = self.smarthumidifier.details["filter_life"]
+            if isinstance(life, (int, float)):
+                return life
+        elif has_feature(self.smarthumidifier, "details", "filter_life_percentage"):
+            life = self.smarthumidifier.details["filter_life_percentage"]
+            if isinstance(life, (int, float)):
+                return life
+        else:
+            return NOne
 
     @property
     def native_unit_of_measurement(self):
@@ -497,15 +507,6 @@ class VeSyncFilterLifeSensor(VeSyncHumidifierSensorEntity):
     def state_class(self):
         """Return the measurement state class."""
         return SensorStateClass.MEASUREMENT
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        return (
-            self.smarthumidifier.details["filter_life"]
-            if isinstance(self.smarthumidifier.details["filter_life"], dict)
-            else {}
-        )
 
     @property
     def icon(self):
@@ -596,6 +597,43 @@ class VeSyncHumiditySensor(VeSyncHumidifierSensorEntity):
     def native_unit_of_measurement(self):
         """Return the % unit of measurement."""
         return PERCENTAGE
+
+    @property
+    def state_class(self):
+        """Return the measurement state class."""
+        return SensorStateClass.MEASUREMENT
+
+class VeSyncTemperatureSensor(VeSyncHumidifierSensorEntity):
+    """Representation of current temperature for a VeSync humidifier."""
+
+    def __init__(self, temperature, coordinator) -> None:
+        """Initialize the VeSync outlet device."""
+        super().__init__(temperature, coordinator)
+
+    @property
+    def unique_id(self):
+        """Return unique ID for temperature sensor on device."""
+        return f"{super().unique_id}-temperature"
+
+    @property
+    def name(self):
+        """Return sensor name."""
+        return f"{super().name} current temperature"
+
+    @property
+    def device_class(self):
+        """Return the temperature device class."""
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def native_value(self):
+        """Return the current temperature in degrees."""
+        return self.smarthumidifier.details["temperature"] / 10
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the temperature unit of measurement."""
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def state_class(self):
