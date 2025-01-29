@@ -6,7 +6,11 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 [![GitHub release](https://img.shields.io/github/v/release/vlebourl/custom_vesync.svg)](https://GitHub.com/vlebourl/custom_vesync/releases/)
 
-# This fork incorporates async changes and the addition of the 6000S humidifier
+# This fork incorporates:
+	* async changes 
+	* the addition of the 6000S humidifier
+	* temperature sensor
+	* filter percentage left
 
 # VeSync custom component for Home Assistant
 
